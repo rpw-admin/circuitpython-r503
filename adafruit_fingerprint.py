@@ -65,6 +65,7 @@ _TEMPLATEREAD = const(0x1F)
 _SOFTRESET = const(0x3D)
 _GETECHO = const(0x53)
 _SETAURA = const(0x35)
+_READPRODINFO = const(0x3C)
 
 # Packet error code
 OK = const(0x0)
@@ -337,6 +338,37 @@ class Adafruit_Fingerprint:
         Returns the packet error code or success"""
         self._send_packet([_SETAURA, mode, speed, color, cycles])
         return self._get_packet(12)[0]
+
+    def read_prod_info(self) -> dict | int:
+        """Get Product Information
+            - Module Type, 16 bytes, ASCII
+            - Module Batch number, 4 bytes, ASCII
+            - Module Serial Number, 8 bytes, ASCII
+            - Hardware version
+            - Sensor type, 8 bytes, ASCII
+            - Image width, 2 bytes
+            - Image height, 2 bytes
+            - Fingerprint database size, 2 bytes
+            - ( Other, 4 bytes )
+        """
+        self._send_packet([_READPRODINFO])
+        r = self._get_packet(62)
+        if r[0] != OK:
+            return r[0]
+
+        d = r[1:]
+        info = (d[:16], d[16:20], d[20:28], d[28:30], d[30:38], d[38:40], d[40:42], d[42:44], d[44:46])
+        return {
+            'module_type': info[0].decode('ascii').replace('\x00', ''),
+            'batch_number': info[1].decode('ascii'),
+            'serial_number': info[2].decode('ascii'),
+            'hardware_version': info[3],
+            'sensor_type': info[4].decode('ascii'),
+            'image_width': struct.unpack('>H', info[5])[0],
+            'image_height': struct.unpack('>H', info[6])[0],
+            'template_size': struct.unpack('>H', info[7])[0],
+            'database_size': struct.unpack('>H', info[8])[0]
+        }
 
     ##################################################
 
