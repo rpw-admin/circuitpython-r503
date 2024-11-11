@@ -356,20 +356,19 @@ class Adafruit_Fingerprint:
         if r[0] != OK:
             return r[0]
 
-        d = r[1:]
+        d = bytes(r[1:])
         info = (d[:16], d[16:20], d[20:28], d[28:30], d[30:38], d[38:40], d[40:42], d[42:44], d[44:46])
         return {
             'module_type': info[0].decode('ascii').replace('\x00', ''),
             'batch_number': info[1].decode('ascii'),
             'serial_number': info[2].decode('ascii'),
-            'hardware_version': info[3],
+            'hardware_version': str(info[3][0]) + "." + str(info[3][1]),
             'sensor_type': info[4].decode('ascii'),
             'image_width': struct.unpack('>H', info[5])[0],
             'image_height': struct.unpack('>H', info[6])[0],
             'template_size': struct.unpack('>H', info[7])[0],
             'database_size': struct.unpack('>H', info[8])[0]
         }
-
     ##################################################
 
     def _get_packet(self, expected: int) -> List[int]:
