@@ -352,7 +352,7 @@ class Adafruit_Fingerprint:
             - ( Other, 4 bytes )
         """
         self._send_packet([_READPRODINFO])
-        r = self._get_packet(62)
+        r = self._get_packet(58)
         if r[0] != OK:
             return r[0]
 
